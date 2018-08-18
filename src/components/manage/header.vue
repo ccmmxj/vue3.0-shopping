@@ -1,7 +1,7 @@
 <template>
 
   <div class="layui-header">
-    <div class="layui-logo">edu 后台布局</div>
+    <div class="layui-logo">shopme 后台布局</div>
     <!-- 头部区域（可配合layui已有的水平导航） -->
     <ul class="layui-nav layui-layout-left">
       <!--<li class="layui-nav-item"><a href="">控制台</a></li>-->
