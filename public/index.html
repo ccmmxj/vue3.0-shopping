@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <link rel="icon" href="<%= BASE_URL %>favicon.ico">
+    <link rel="stylesheet" href="http://edu.ccmmxj.club/layui/css/layui.css">
+    <link rel="stylesheet" href="http://edu.ccmmxj.club/css/baguetteBox.css">
+    <link rel="stylesheet" href="http://edu.ccmmxj.club/css/style.css">
+    <title>shopme</title>
+    <!--<title>vue3.0-shopping</title>-->
+  </head>
+  <body>
+    <noscript>
+      <strong>We're sorry but vue3.0-shopping doesn't work properly without JavaScript enabled. Please enable it to continue.</strong>
+    </noscript>
+    <div id="app"></div>
+    <!-- built files will be auto injected -->
+  </body>
+  <script type="text/javascript" src="https://unpkg.com/vue@2.3.4/dist/vue.js"></script>
+  <script src="http://edu.ccmmxj.club/layui/layui.all.js"></script>
+  <script src="http://edu.ccmmxj.club/layui/lay/modules/table.js"></script>
+  <script src="http://edu.ccmmxj.club/layui/lay/modules/upload.js"></script>
+  <script src="http://edu.ccmmxj.club/jquery.min.js"></script>
+  <script src="http://edu.ccmmxj.club/baguetteBox.js"></script>
+  <script>
+      //JavaScript代码区域
+      $(function(){
+          index.init();
+      })
+      var index = {
+          host:"http://127.0.0.1:8080/",
+          init:()=>{
+              index.dateFormatInit();
+              layui.element.init();
+              layui.use('element', function(){
+                  var element = layui.element;
+                  element.init()
+              });
+          },
+          dateFormatInit: () => {
+              Date.prototype.format = function(format)
+              {
+                  var o = {
+                      "M+" : this.getMonth()+1, //month
+                      "d+" : this.getDate(),    //day
+                      "h+" : this.getHours(),   //hour
+                      "m+" : this.getMinutes(), //minute
+                      "s+" : this.getSeconds(), //second
+                      "q+" : Math.floor((this.getMonth()+3)/3),  //quarter
+                      "S" : this.getMilliseconds() //millisecond
+                  }
+                  if(/(y+)/.test(format)) format=format.replace(RegExp.$1,
+                      (this.getFullYear()+"").substr(4 - RegExp.$1.length));
+                  for(var k in o)if(new RegExp("("+ k +")").test(format))
+                      format = format.replace(RegExp.$1,
+                          RegExp.$1.length==1 ? o[k] :
+                              ("00"+ o[k]).substr((""+ o[k]).length));
+                  return format;
+              }
+          },
+          flow: () => {
+              layui.use('flow', function () {
+                  var flow = layui.flow;
+                  flow.lazyimg({
+                      elem: '[name=flow]'
+                      , scrollElem: '[name=flow]'
+                  });
+              });
+          },
+          form:()=>{
+              layui.use('form', function(){
+                  var form = layui.form;
+                  //
+                  // //监听提交
+                  // form.on('submit(formDemo)', function(data){
+                  //   layer.msg(JSON.stringify(data.field));
+                  //   return false;
+                  // });
+              });
+          },
+          upload:(sessionid)=>{
+              layui.use('upload', function() {
+                  var $ = layui.jquery
+                      , upload = layui.upload;
+
+                  //普通图片上传
+                  var uploadInst = upload.render({
+                      elem: '[name=img]'
+                      , url: index.host + 'manage/upload/img',
+                      xhr:{
+                          withCredentials:true
+                      }
+                      , before: function (obj) {
+                          //预读本地文件示例，不支持ie8
+                          obj.preview(function (index, file, result) {
+                              $('#img').attr('src', result); //图片链接（base64）
+                          });
+                      }
+                      , done: function (res) {
+                          console.log(res)
+                          //如果上传失败
+                          if (!res.success) {
+                              return layer.msg('上传失败');
+                          }
+                          $('#img').attr('src', res.result); //图片链接（base64）
+                          $('#imgUrl').html(res.result);
+                          $('#imgUrl').click()
+                          //上传成功
+                      }
+                      , error: function () {
+                          //演示失败状态，并实现重传
+                          var demoText = $('#imgText');
+                          demoText.html('<span style="color: #FF5722;">上传失败</span> <a class="layui-btn layui-btn-mini demo-reload">重试</a>');
+                          demoText.find('.demo-reload').on('click', function () {
+                              uploadInst.upload();
+                          });
+                      }
+                  });
+                  upload.render({
+                      elem: '[name=video]'
+                      ,url: index.host + 'manage/upload/video;jsessionid=' + sessionid
+                      ,accept: 'video' //视频
+                      ,xhr:{
+                          withCredentials:true
+                      },done: function(res){
+                          console.log(res)
+                          //如果上传失败
+                          if (!res.success) {
+                              return layer.msg('上传失败');
+                          }
+                          $('#videoUrl').html(res.result);
+                          $('#videoUrl').click()
+                          //上传成功
+                      }
+                  });
+                  upload.render({
+                      elem: '[name=audio]'
+                      ,url: index.host + 'manage/upload/audio;jsessionid=' + sessionid
+                      ,accept: 'audio' //音频B973FC554B3676E8DBECED6643CE2D33
+                      , xhr:{
+                          withCredentials:true
+                      },done: function(res){
+                          console.log(res)
+                          //如果上传失败
+                          if (!res.success) {
+                              return layer.msg('上传失败');
+                          }
+                          $('#audioUrl').html(res.result);
+                          $('#audioUrl').click()
+                          //上传成功
+                      }
+                  });
+              })
+          },
+          tableReload: (where,tableId) => {
+              var table = layui.table;
+              //执行重载
+              table.reload(tableId, {
+                  page: {
+                      curr: 1 //重新从第 1 页开始
+                  }
+                  ,where: where
+              });
+          },
+          table:(id,filter,page,url,tools,titles,sessionid,where)=>{
+              console.log(sessionid)
+              layui.use('table', function(){
+                  var table = layui.table;
+                  //第一个实例
+                  var tableLay = table.render({
+                      elem: id
+                      ,id: id
+                      ,height: 615
+                      ,limit: 20
+                      ,sortType: 'remote' //默认: "local"或空
+                      // ,loading: true
+                      ,url: url //数据接口
+                      ,where: where //传参
+                      ,page: true //开启分页
+                      ,method: 'post'
+                      ,cols: titles
+                      ,request: {
+                          pageName: 'pageNumber' //页码的参数名称，默认：page
+                          ,limitName: 'pageSize' //每页数据量的参数名，默认：limit
+                      },
+                      xhr:{
+                          withCredentials:true
+                      },
+                      response: {
+                          // statusName: 'code' //数据状态的字段名称，默认：code
+                          statusCode: 200 //成功的状态码，默认：0
+                          // ,msgName: 'hint' //状态信息的字段名称，默认：msg
+                          ,countName: 'total' //数据总数的字段名称，默认：count
+                          ,dataName: 'rows' //数据列表的字段名称，默认：data
+                      },
+                      // ,done: function(res, curr, count) {
+                      //   debugger
+                      //   //如果是异步请求数据方式，res即为你接口返回的信息。
+                      //   //如果是直接赋值的方式，res即为：{data: [], count: 99} data为当前页数据、count为数据总长度
+                      //   laypage.render({
+                      //     elem: page
+                      //     , count: count
+                      //     , curr: curr
+                      //     , limit: count
+                      //     , layout: ['prev', 'page', 'next', 'skip', 'count', 'limit']
+                      //     , jump: function (obj, first) {
+                      //       if (!first) {
+                      //         curnum = obj.curr;
+                      //         limitcount = obj.limit;
+                      //         //console.log("curnum"+curnum);
+                      //         //console.log("limitcount"+limitcount);
+                      //         //layer.msg(curnum+"-"+limitcount);
+                      //         productsearch(productGroupId, curnum, limitcount);
+                      //       }
+                      //     }
+                      //   })
+                      // }
+                  });
+                  //排序
+                  table.on('sort(' + filter +')', function(obj){ //注：tool是工具条事件名，test是table原始容器的属性 lay-filter="对应的值"
+                      console.log(obj.field); //当前排序的字段名
+                      console.log(obj.type); //当前排序类型：desc（降序）、asc（升序）、null（空对象，默认排序）
+                      console.log(this); //当前排序的 th 对象
+
+                      //尽管我们的 table 自带排序功能，但并没有请求服务端。
+                      //有些时候，你可能需要根据当前排序的字段，重新向服务端发送请求，从而实现服务端排序，如：
+                      tableLay.reload( {
+                          initSort: obj //记录初始排序，如果不设的话，将无法标记表头的排序状态。 layui 2.1.1 新增参数
+                          ,where: { //请求参数（注意：这里面的参数可任意定义，并非下面固定的格式）
+                              sortName: obj.field //排序字段
+                              ,sortOrder: obj.type //排序方式
+                          }
+                      });
+                  });
+                  //监听工具条
+                  table.on('tool(' + filter + ')',
+                      function(obj){ //注：tool是工具条事件名，test是table原始容器的属性 lay-filter="对应的值"
+                          var data = obj.data //获得当前行数据
+                              ,layEvent = obj.event; //获得 lay-event 对应的值
+                          var toolsR = tools(layer,obj,tableLay);
+                          for( var tool in toolsR){
+                              if(layEvent === tool){
+                                  toolsR[tool](sessionid)
+                              }
+                          }
+                          // if(layEvent === 'detail'){
+                          //   layer.msg('查看操作');
+                          // } else if(layEvent === 'del'){
+                          //   layer.confirm('真的删除行么', function(index){
+                          //     obj.del(); //删除对应行（tr）的DOM结构
+                          //     layer.close(index);
+                          //     tableLay.reload();
+                          //     //向服务端发送删除指令
+                          //   });
+                          // } else if(layEvent === 'edit'){
+                          //   layer.msg('编辑操作');
+                          // }
+                      }
+                  );
+              })
+          },
+          alert (msg,type) {
+              if(!type || type == 1) {
+                  layer.msg(msg);
+              }else if(type == 2){
+                  layer.msg(msg, {
+                      time: 20000, //20s后自动关闭
+                      btn: ['明白了']
+                  });
+              }
+          }
+      }
+  </script>
+</html>
